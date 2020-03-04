@@ -1,1 +1,150 @@
+USE nfl;
+DROP TABLE PLAYED_FOR;
+DROP TABLE COACHES;
+DROP TABLE INJURY_REPORT;
+DROP TABLE GAME;
+DROP TABLE TEAM_PERFORMANCE;
+DROP TABLE STADIUM;
+DROP TABLE SEASON;
+DROP TABLE PLAYER;
+DROP TABLE COACH;
+DROP TABLE TEAM;
 
+CREATE TABLE TEAM
+(
+teamName VARCHAR(20) NOT NULL,
+location VARCHAR(20) NOT NULL,
+owner VARCHAR(20) NOT NULL,
+PRIMARY KEY(teamName), INDEX (teamName)
+)engine = innodb;
+
+
+CREATE TABLE COACH
+(
+coachID INT NOT NULL,
+fName VARCHAR(20) NOT NULL,
+lName VARCHAR(20) NOT NULL,
+Bdate DATE NOT NULL,
+salary decimal(8,2) NOT NULL,
+coachStatus VARCHAR(10) NOT NULL,
+PRIMARY KEY(coachID), Index(coachID), 
+CONSTRAINT C_coachStatusConstr CHECK (coachStatus IN('Active', 'Retired')),
+CONSTRAINT C_bDateConstr CHECK (bDate >= '1850-01-01'),
+CONSTRAINT C_salaryConstr CHECK (salary >= 0)
+)engine = innodb;
+
+CREATE TABLE SEASON
+(
+year INT NOT NULL,
+T_championTeam VARCHAR(20),
+PRIMARY KEY(year), INDEX (year), 
+FOREIGN KEY(T_championTeam) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT S_yearConstr CHECK (year BETWEEN 1920 and 9999)
+)engine = innodb;
+
+CREATE TABLE PLAYER
+(
+playerID INT NOT NULL,
+fName VARCHAR(20) NOT NULL,
+lName VARCHAR(20) NOT NULL,
+position VARCHAR(20) NOT NULL,
+salary decimal(8,2) NOT NULL,
+status VARCHAR(10) NOT NULL,
+bDate DATE NOT NULL,
+PRIMARY KEY(playerID), INDEX (playerID), 
+CONSTRAINT P_statusConstr CHECK (status IN('Active', 'Retired')),
+CONSTRAINT P_playerIDConstr CHECK (playerID >= 0),
+CONSTRAINT P_salaryConstr CHECK (salary >= 0.0),
+CONSTRAINT P_bDateConstr CHECK (bDate >= '1850-01-01')
+)engine = innodb;
+
+CREATE TABLE STADIUM
+(
+stadiumName VARCHAR(20) NOT NULL,
+T_homeTeam VARCHAR(20) NOT NULL,
+yearBuilt INT NOT NULL,
+location VARCHAR(20) NOT NULL,
+capacity INT NOT NULL,
+PRIMARY KEY(stadiumName,T_homeTeam), INDEX (stadiumName), INDEX(T_homeTeam), 
+FOREIGN KEY(T_homeTeam) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT St_yearBuiltConstr CHECK (yearBuilt >= 1700),
+CONSTRAINT St_capacityConstr CHECK (capacity >= 1)
+)engine = innodb;
+
+CREATE TABLE TEAM_PERFORMANCE
+(
+S_year INT NOT NULL,
+T_teamName VARCHAR(20) NOT NULL,
+T_startDate DATE NOT NULL,
+c_coachID INT NOT NULL,
+passingYards INT NOT NULL,
+rushingYards INT NOT NULL,
+touchdowns INT NOT NULL,
+sacks decimal(3,1) NOT NULL,
+interceptions int NOT NULL,
+wins INT NOT NULL,
+losses INT NOT NULL,	
+PRIMARY KEY(S_year, t_teamName), index(S_year), index(t_teamName), 
+FOREIGN KEY(S_Year) REFERENCES SEASON(year) ON UPDATE CASCADE ON DELETE CASCADE ,
+FOREIGN KEY(c_coachID) REFERENCES COACH(coachID)  ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT TP_touchdownsConstr CHECK (touchdowns >= 0),
+CONSTRAINT TP_sacksConstr CHECK (sacks >= 0),
+CONSTRAINT TP_interceptionsConstr CHECK (interceptions >= 0),
+CONSTRAINT TP_winsConstr CHECK (wins >= 0),
+CONSTRAINT TP_lossesConstr CHECK (losses >= 0)
+)engine = innodb;
+
+CREATE TABLE GAME
+(
+gameDate DATE NOT NULL,
+homeTeam VARCHAR(20) NOT NULL,
+awayTeam VARCHAR(20) NOT NULL, 
+S_Year INT NOT NULL,
+S_stadiumName VARCHAR(20) NOT NULL,
+primeTime BOOL NOT NULL,
+awayTeamScore INT NOT NULL,
+homeTeamScore INT NOT NULL,
+PRIMARY KEY(gameDate, homeTeam, awayTeam),
+INDEX(gameDate), INDEX(homeTeam), INDEX(awayTeam), 
+FOREIGN KEY(S_Year) REFERENCES SEASON(year) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(S_stadiumName) REFERENCES STADIUM(stadiumName) ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT G_gameDateConstr CHECK (gameDate >= '1920-08-20'),
+CONSTRAINT G_awayTeamScoreConstr CHECK (awayTeamScore >= 0),
+CONSTRAINT G_homeTeamScoreConstr CHECK (homeTeamScore >= 0)
+)engine = innodb;
+
+CREATE TABLE INJURY_REPORT
+(
+injuryType VARCHAR(20) NOT NULL,
+injuryDate DATE NOT NULL,
+recoveryTime VARCHAR(20) NOT NULL,
+P_PlayerID INT NOT NULL,
+PRIMARY KEY(injuryType, injuryDate),
+INDEX(injuryType), INDEX(injuryDate), 
+FOREIGN KEY(P_PlayerID) REFERENCES PLAYER(playerID) ON UPDATE CASCADE ON DELETE CASCADE,
+CONSTRAINT IR_injuryDateConstr CHECK (injuryDate >= '1920-08-20'),
+CONSTRAINT IR_recoveryTimeConstr CHECK (recoveryTime >= 0)
+)engine = innodb;
+
+CREATE TABLE COACHES
+(
+C_coachID INT NOT NULL,
+T_TeamName VARCHAR(20) NOT NULL,
+S_year INT NOT NULL,
+PRIMARY KEY(C_coachID, T_TeamName),
+INDEX(C_coachID),  INDEX(T_TeamName), 
+FOREIGN KEY(C_coachID) REFERENCES COACH(coachID) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(T_teamName) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(S_year) REFERENCES SEASON(year)
+)engine = innodb;
+
+CREATE TABLE PLAYED_FOR
+(
+P_playerID int NOT NULL,
+T_teamName VARCHAR(20) NOT NULL,
+S_year int NOT NULL,
+PRIMARY KEY(P_playerID, T_teamName, S_year),
+FOREIGN KEY(P_playerID) REFERENCES PLAYER(playerID) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(T_teamName) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(S_year) REFERENCES SEASON(year)ON UPDATE CASCADE ON DELETE CASCADE
+)engine = innodb;
