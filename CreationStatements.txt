@@ -13,9 +13,9 @@ DROP TABLE TEAM;
 
 CREATE TABLE TEAM
 (
-teamName VARCHAR(20) NOT NULL,
-location VARCHAR(20) NOT NULL,
-owner VARCHAR(20) NOT NULL,
+teamName VARCHAR(30) NOT NULL,
+location VARCHAR(30) NOT NULL,
+owner VARCHAR(30) NOT NULL,
 PRIMARY KEY(teamName), INDEX (teamName)
 )engine = innodb;
 
@@ -23,12 +23,13 @@ PRIMARY KEY(teamName), INDEX (teamName)
 CREATE TABLE COACH
 (
 coachID INT NOT NULL,
-fName VARCHAR(20) NOT NULL,
-lName VARCHAR(20) NOT NULL,
-Bdate DATE NOT NULL,
+fName VARCHAR(30) NOT NULL,
+lName VARCHAR(30) NOT NULL,
+bDate DATE NOT NULL,
 salary decimal(8,2) NOT NULL,
 coachStatus VARCHAR(10) NOT NULL,
 PRIMARY KEY(coachID), Index(coachID), 
+CONSTRAINT C_coachIDConstr CHECK (coachID >= 0),
 CONSTRAINT C_coachStatusConstr CHECK (coachStatus IN('Active', 'Retired')),
 CONSTRAINT C_bDateConstr CHECK (bDate >= '1850-01-01'),
 CONSTRAINT C_salaryConstr CHECK (salary >= 0)
@@ -37,7 +38,7 @@ CONSTRAINT C_salaryConstr CHECK (salary >= 0)
 CREATE TABLE SEASON
 (
 year INT NOT NULL,
-T_championTeam VARCHAR(20),
+T_championTeam VARCHAR(30),
 PRIMARY KEY(year), INDEX (year), 
 FOREIGN KEY(T_championTeam) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
 CONSTRAINT S_yearConstr CHECK (year BETWEEN 1920 and 9999)
@@ -46,9 +47,9 @@ CONSTRAINT S_yearConstr CHECK (year BETWEEN 1920 and 9999)
 CREATE TABLE PLAYER
 (
 playerID INT NOT NULL,
-fName VARCHAR(20) NOT NULL,
-lName VARCHAR(20) NOT NULL,
-position VARCHAR(20) NOT NULL,
+fName VARCHAR(30) NOT NULL,
+lName VARCHAR(30) NOT NULL,
+position VARCHAR(30) NOT NULL,
 salary decimal(8,2) NOT NULL,
 status VARCHAR(10) NOT NULL,
 bDate DATE NOT NULL,
@@ -61,10 +62,10 @@ CONSTRAINT P_bDateConstr CHECK (bDate >= '1850-01-01')
 
 CREATE TABLE STADIUM
 (
-stadiumName VARCHAR(20) NOT NULL,
-T_homeTeam VARCHAR(20) NOT NULL,
+stadiumName VARCHAR(30) NOT NULL,
+T_homeTeam VARCHAR(30) NOT NULL,
 yearBuilt INT NOT NULL,
-location VARCHAR(20) NOT NULL,
+location VARCHAR(30) NOT NULL,
 capacity INT NOT NULL,
 PRIMARY KEY(stadiumName,T_homeTeam), INDEX (stadiumName), INDEX(T_homeTeam), 
 FOREIGN KEY(T_homeTeam) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -75,8 +76,7 @@ CONSTRAINT St_capacityConstr CHECK (capacity >= 1)
 CREATE TABLE TEAM_PERFORMANCE
 (
 S_year INT NOT NULL,
-T_teamName VARCHAR(20) NOT NULL,
-c_coachID INT NOT NULL,
+T_teamName VARCHAR(30) NOT NULL,
 passingYards INT NOT NULL,
 rushingYards INT NOT NULL,
 touchdowns INT NOT NULL,
@@ -87,7 +87,6 @@ losses INT NOT NULL,
 ties INT NOT NULL,
 PRIMARY KEY(S_year, t_teamName), index(S_year), index(t_teamName), 
 FOREIGN KEY(S_Year) REFERENCES SEASON(year) ON UPDATE CASCADE ON DELETE CASCADE ,
-FOREIGN KEY(c_coachID) REFERENCES COACH(coachID)  ON UPDATE CASCADE ON DELETE CASCADE,
 CONSTRAINT TP_touchdownsConstr CHECK (touchdowns >= 0),
 CONSTRAINT TP_sacksConstr CHECK (sacks >= 0),
 CONSTRAINT TP_interceptionsConstr CHECK (interceptions >= 0),
@@ -98,16 +97,18 @@ CONSTRAINT TP_lossesConstr CHECK (losses >= 0)
 CREATE TABLE GAME
 (
 gameDate DATE NOT NULL,
-homeTeam VARCHAR(20) NOT NULL,
-awayTeam VARCHAR(20) NOT NULL, 
+T_homeTeam VARCHAR(30) NOT NULL,
+T_awayTeam VARCHAR(30) NOT NULL, 
 S_Year INT NOT NULL,
-S_stadiumName VARCHAR(20) NOT NULL,
+S_stadiumName VARCHAR(30) NOT NULL,
 primeTime BOOL NOT NULL,
 awayTeamScore INT NOT NULL,
 homeTeamScore INT NOT NULL,
-PRIMARY KEY(gameDate, homeTeam, awayTeam),
-INDEX(gameDate), INDEX(homeTeam), INDEX(awayTeam), 
+PRIMARY KEY(gameDate, T_homeTeam, T_awayTeam),
+INDEX(gameDate), INDEX(T_homeTeam), INDEX(T_awayTeam), 
 FOREIGN KEY(S_Year) REFERENCES SEASON(year) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(T_homeTeam) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
+FOREIGN KEY(T_awayTeam) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
 FOREIGN KEY(S_stadiumName) REFERENCES STADIUM(stadiumName) ON UPDATE CASCADE ON DELETE CASCADE,
 CONSTRAINT G_gameDateConstr CHECK (gameDate >= '1920-08-20'),
 CONSTRAINT G_awayTeamScoreConstr CHECK (awayTeamScore >= 0),
@@ -116,9 +117,9 @@ CONSTRAINT G_homeTeamScoreConstr CHECK (homeTeamScore >= 0)
 
 CREATE TABLE INJURY_REPORT
 (
-injuryType VARCHAR(20) NOT NULL,
+injuryType VARCHAR(40) NOT NULL,
 injuryDate DATE NOT NULL,
-recoveryTime VARCHAR(20) NOT NULL,
+recoveryTime VARCHAR(30) NOT NULL,
 P_PlayerID INT NOT NULL,
 PRIMARY KEY(injuryType, injuryDate),
 INDEX(injuryType), INDEX(injuryDate), 
@@ -130,22 +131,23 @@ CONSTRAINT IR_recoveryTimeConstr CHECK (recoveryTime >= 0)
 CREATE TABLE COACHES
 (
 C_coachID INT NOT NULL,
-T_TeamName VARCHAR(20) NOT NULL,
+T_TeamName VARCHAR(30) NOT NULL,
 S_year INT NOT NULL,
 PRIMARY KEY(C_coachID, T_TeamName),
 INDEX(C_coachID),  INDEX(T_TeamName), 
 FOREIGN KEY(C_coachID) REFERENCES COACH(coachID) ON UPDATE CASCADE ON DELETE CASCADE,
 FOREIGN KEY(T_teamName) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
-FOREIGN KEY(S_year) REFERENCES SEASON(year)
+FOREIGN KEY(S_year) REFERENCES SEASON(year) ON UPDATE CASCADE ON DELETE CASCADE
 )engine = innodb;
 
 CREATE TABLE PLAYED_FOR
 (
 P_playerID int NOT NULL,
-T_teamName VARCHAR(20) NOT NULL,
+T_teamName VARCHAR(30) NOT NULL,
 S_year int NOT NULL,
 PRIMARY KEY(P_playerID, T_teamName, S_year),
 FOREIGN KEY(P_playerID) REFERENCES PLAYER(playerID) ON UPDATE CASCADE ON DELETE CASCADE,
 FOREIGN KEY(T_teamName) REFERENCES TEAM(teamName) ON UPDATE CASCADE ON DELETE CASCADE,
 FOREIGN KEY(S_year) REFERENCES SEASON(year)ON UPDATE CASCADE ON DELETE CASCADE
 )engine = innodb;
+
